@@ -1,0 +1,16 @@
+POST http://localhost:8080/upload
+Accept: application/json
+Content-Type: application/json
+
+{
+  "input_data": "Hello, world!"
+}
+###
+
+GET http://localhost:8080/status/0
+Accept: application/json
+
+###
+
+GET http://localhost:80/download/1
+Accept: application/json
