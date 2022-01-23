@@ -1,3 +1,4 @@
+# builder-layer
 FROM python:3.8@sha256:4c4e6735f46e7727965d1523015874ab08f71377b3536b8789ee5742fc737059 as builder
 
 WORKDIR /builder
@@ -9,6 +10,7 @@ COPY requirements.txt .
 
 RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
 
+# app-layer
 FROM python:3.8-slim@sha256:d20122663d629b8b0848e2bb78d929c01aabab37c920990b37bb32bc47328818 as app
 
 # create non-root user for safety
