@@ -12,16 +12,12 @@ from app.execution.storage import IExecutorTaskDataStorage
 from app.execution.storage import build_executor_task_data_storage
 
 
-def register_signal_handler() -> None:
-    signal.signal(signal.SIGSEGV, signal.SIGSEGV)
-
 
 async def task_queue_context(app: web.Application) -> None:
     task_queue: asyncio.Queue = app.get("task_queue")
     task_repository: ITaskRepository = app.get("task_repository")
 
     process_pool_executor = ProcessPoolExecutor(
-        initializer=register_signal_handler,
         max_workers=2
     )
 

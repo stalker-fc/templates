@@ -38,4 +38,4 @@ COPY main.py .
 HEALTHCHECK CMD curl --fail http://localhost:8080/ || exit 1
 
 # using exec-form to correctly handle Ctrl+C
-ENTRYPOINT ["gunicorn", "main:app", "--bind", "0.0.0.0:8080", "--worker-class", "aiohttp.GunicornWebWorker"]
+ENTRYPOINT ["gunicorn", "main:startup_app", "--bind", "0.0.0.0:8080", "--worker-class", "aiohttp.GunicornWebWorker"]

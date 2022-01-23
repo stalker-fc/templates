@@ -3,9 +3,11 @@ from typing import Optional
 
 from app.domain.model import Task
 from app.domain.model import TaskStatus
-from app.domain.storage import InMemoryRepositoryTaskDataStorage
 from app.domain.storage import IRepositoryTaskDataStorage
+from app.domain.storage import InMemoryRepositoryTaskDataStorage
+from app.logger import get_logger
 
+logger = get_logger(__name__)
 
 __all__ = [
     "build_task_repository",
@@ -71,6 +73,7 @@ class InMemoryTaskRepository(ITaskRepository):
         return task.status
 
     async def set_task_status(self, task_id: int, status: TaskStatus) -> None:
+        logger.info(f"task_id={task_id}. status={status.value}")
         task = await self._task_data_storage.get_task(task_id)
         task.status = status
         await self._task_data_storage.put_task(task)

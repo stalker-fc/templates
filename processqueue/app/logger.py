@@ -1,7 +1,6 @@
 import logging
 import logging.config
 import os
-import sys
 from logging import Logger
 
 
@@ -17,30 +16,13 @@ class LogRecordFactory(logging.LogRecord):
 
 
 def get_logger(module_name: str) -> Logger:
-    config = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "common": {
-                "format": "%(asctime)s - %(levelname)s - %(filename)s:%(funcName)s - %(message)s"
-            },
-        },
-        "handlers": {
-            "console": {
-                "class": "logging.StreamHandler",
-                "level": "INFO",
-                "formatter": "common",
-                "stream": sys.stdout
-            },
-        },
-        "loggers": {
-            "": {
-                "handlers": ["console"],
-                "level": "INFO",
-            },
-        }
-    }
-    logging.config.dictConfig(config)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.StreamHandler()
+        ]
+    )
     logging.setLogRecordFactory(LogRecordFactory)
     logger = logging.getLogger(f"{module_name}")
     return logger

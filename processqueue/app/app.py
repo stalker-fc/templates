@@ -13,10 +13,8 @@ def configure_dependencies(app: web.Application) -> None:
     app["task_queue"] = build_task_queue()
     app["task_repository"] = build_task_repository()
 
-
 def configure_context(app: web.Application) -> None:
     app.cleanup_ctx.append(task_queue_context)
-
 
 def configure_routes(app: web.Application) -> None:
     routes = [
@@ -30,7 +28,7 @@ def configure_routes(app: web.Application) -> None:
     app.add_routes(routes)
 
 
-def build_app():
+async def startup_app() -> web.Application:
     app = web.Application()
 
     configure_dependencies(app)

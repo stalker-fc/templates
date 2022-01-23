@@ -105,5 +105,5 @@ class ExecutorTaskDataStorageConfig:
 
 
 def build_executor_task_data_storage(config: ExecutorTaskDataStorageConfig) -> IExecutorTaskDataStorage:
-    root_data_folder = Path(__file__)
+    root_data_folder = Path(__file__).parent
     return FileExecutorTaskDataStorage(root_data_folder)

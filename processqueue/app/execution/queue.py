@@ -23,14 +23,13 @@ async def handle_task(
 
     executor_task_data_storage.set_input_data(task.task_id, task.input_data)
 
+    await task_repository.set_task_status(task_id, TaskStatus.RUNNING)
     result = await loop.run_in_executor(
         process_pool_executor,
         worker_handle_task,
         execution_config,
         task.task_id
     )
-
-    await task_repository.set_task_status(task_id, TaskStatus.RUNNING)
 
     if result is Result.SUCCESS:
         logger.info(f"Execution of task id=`{task_id}` is completed successfully.")
