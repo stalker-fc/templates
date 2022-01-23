@@ -3,10 +3,10 @@ import time
 import traceback
 from dataclasses import dataclass
 
-from app.common import Result
-from app.logger import get_logger
-from app.storage import ExecutorTaskDataStorageConfig
-from app.storage import build_executor_task_data_storage
+from app.common.logger import get_logger
+from app.execution.result import Result
+from app.execution.storage import ExecutorTaskDataStorageConfig
+from app.execution.storage import build_executor_task_data_storage
 
 logger = get_logger(__name__)
 

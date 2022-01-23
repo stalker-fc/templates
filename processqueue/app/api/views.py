@@ -2,7 +2,7 @@ import asyncio
 
 from aiohttp import web
 
-from app.repository import ITaskRepository
+from app.domain.repository import ITaskRepository
 
 
 

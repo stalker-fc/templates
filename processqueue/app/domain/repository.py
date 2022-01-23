@@ -1,10 +1,16 @@
 import abc
 from typing import Optional
 
-from app.model import Task
-from app.model import TaskStatus
-from app.storage import IRepositoryTaskDataStorage
+from app.domain.model import Task
+from app.domain.model import TaskStatus
+from app.domain.storage import DummyRepositoryTaskDataStorage
+from app.domain.storage import IRepositoryTaskDataStorage
 
+
+__all__ = [
+    "build_task_repository",
+    "ITaskRepository"
+]
 
 class ITaskRepository(abc.ABC):
     @abc.abstractmethod
@@ -76,3 +82,8 @@ class DummyTaskRepository(ITaskRepository):
     async def get_task_output_data(self, task_id: int) -> Optional[str]:
         task = await self._task_data_storage.get_task(task_id)
         return task.output_data
+
+
+def build_task_repository() -> ITaskRepository:
+    repository_task_data_storage = DummyRepositoryTaskDataStorage()
+    return DummyTaskRepository(repository_task_data_storage)

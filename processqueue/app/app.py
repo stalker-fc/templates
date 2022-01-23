@@ -1,20 +1,17 @@
-import asyncio
-
 from aiohttp import web
 
-from app.contexts import task_queue_context
-from app.repository import DummyTaskRepository
-from app.storage import DummyRepositoryTaskDataStorage
-from app.views import download_content
-from app.views import get_task_status
-from app.views import healthcheck
-from app.views import upload_content
+from app.api.contexts import task_queue_context
+from app.api.views import download_content
+from app.api.views import get_task_status
+from app.api.views import healthcheck
+from app.api.views import upload_content
+from app.domain.repository import build_task_repository
+from app.execution.queue import build_task_queue
 
 
 def configure_dependencies(app: web.Application) -> None:
-    app["task_queue"] = asyncio.Queue()
-    repository_task_data_storage = DummyRepositoryTaskDataStorage()
-    app["task_repository"] = DummyTaskRepository(repository_task_data_storage)
+    app["task_queue"] = build_task_queue()
+    app["task_repository"] = build_task_repository()
 
 
 def configure_context(app: web.Application) -> None:

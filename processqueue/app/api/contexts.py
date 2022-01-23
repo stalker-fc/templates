@@ -1,17 +1,15 @@
 import asyncio
-
 import signal
+from concurrent.futures import ProcessPoolExecutor
 
 from aiohttp import web
 
-from concurrent.futures import ProcessPoolExecutor
-
-from app.executor import ExecutionConfig
-from app.queue import task_queue_listener
-from app.repository import ITaskRepository
-from app.storage import ExecutorTaskDataStorageConfig
-from app.storage import IExecutorTaskDataStorage
-from app.storage import build_executor_task_data_storage
+from app.domain.repository import ITaskRepository
+from app.execution.executor import ExecutionConfig
+from app.execution.queue import task_queue_listener
+from app.execution.storage import ExecutorTaskDataStorageConfig
+from app.execution.storage import IExecutorTaskDataStorage
+from app.execution.storage import build_executor_task_data_storage
 
 
 def register_signal_handler() -> None:

@@ -2,12 +2,12 @@ import asyncio
 import os
 from concurrent.futures import ProcessPoolExecutor
 
-from app.common import Result
-from app.executor import ExecutionConfig
-from app.executor import execute_task as worker_handle_task
-from app.model import TaskStatus
-from app.repository import ITaskRepository
-from app.storage import IExecutorTaskDataStorage
+from app.domain.model import TaskStatus
+from app.domain.repository import ITaskRepository
+from app.execution.executor import ExecutionConfig
+from app.execution.executor import execute_task as worker_handle_task
+from app.execution.result import Result
+from app.execution.storage import IExecutorTaskDataStorage
 
 
 async def handle_task(
@@ -65,3 +65,7 @@ async def task_queue_listener(
         await task_repository.set_task_status(task_id, TaskStatus.QUEUED)
 
         task_queue.task_done()
+
+
+def build_task_queue() -> asyncio.Queue:
+    return asyncio.Queue()
