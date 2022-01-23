@@ -6,11 +6,13 @@ from concurrent.futures import ProcessPoolExecutor
 from aiohttp.web import Application
 
 from app.common import Result
+from app.executor import ExecutionConfig
+from app.executor import execute_task as worker_handle_task
 from app.model import TaskStatus
 from app.repository import ITaskRepository
-from app.storage import IExecutorTaskDataStorage, DummyExecutorTaskDataStorage, build_executor_task_data_storage, \
-    ExecutorTaskDataStorageConfig
-from app.executor import execute_task as worker_handle_task, ExecutionConfig
+from app.storage import ExecutorTaskDataStorageConfig
+from app.storage import IExecutorTaskDataStorage
+from app.storage import build_executor_task_data_storage
 
 
 async def handle_task(
@@ -74,7 +76,7 @@ def register_signal_handler() -> None:
     signal.signal(signal.SIGSEGV, lambda _, __: print("Mne kapets"))
 
 
-async def queue_listener_process(app: Application) -> None:
+async def task_queue_context(app: Application) -> None:
     task_queue = asyncio.Queue()
     app["task_queue"] = task_queue
     task_repository: ITaskRepository = app.get("task_repository")

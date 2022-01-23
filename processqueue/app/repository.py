@@ -1,7 +1,8 @@
 import abc
 from typing import Optional
 
-from app.model import TaskStatus, Task
+from app.model import Task
+from app.model import TaskStatus
 from app.storage import IRepositoryTaskDataStorage
 
 

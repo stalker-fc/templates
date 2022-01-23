@@ -5,7 +5,8 @@ from dataclasses import dataclass
 
 from app.common import Result
 from app.logger import get_logger
-from app.storage import build_executor_task_data_storage, ExecutorTaskDataStorageConfig
+from app.storage import ExecutorTaskDataStorageConfig
+from app.storage import build_executor_task_data_storage
 
 logger = get_logger(__name__)
 
@@ -23,11 +24,12 @@ def execute_task(config: ExecutionConfig, task_id: int) -> Result:
         )
         input_data = executor_task_data_storage.get_input_data(task_id)
 
+        # ... do something ...
         time.sleep(2.)
-
         output_data = f"{input_data} - successfully executed"
 
         executor_task_data_storage.set_output_data(task_id, output_data)
+        logger.info(f"Executing task_id={task_id} is successfully completed.")
 
         return Result.SUCCESS
     except Exception:

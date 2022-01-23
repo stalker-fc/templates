@@ -5,6 +5,17 @@ from aiohttp import web
 from app.repository import ITaskRepository
 
 
+
+async def healthcheck(request: web.Request) -> web.Response:
+    return web.Response(
+        status=200,
+        headers={
+            "content-type": "plain/text"
+        },
+        body=str("I`m alive.")
+    )
+
+
 async def upload_content(request: web.Request):
     data = await request.json()
     input_data = data.get("input_data", "")
@@ -28,7 +39,7 @@ async def upload_content(request: web.Request):
     )
 
 
-async def get_task_status(request):
+async def get_task_status(request: web.Request):
     task_id = int(request.match_info['task_id'])
     try:
         task_repository: ITaskRepository = request.app.get("task_repository")
@@ -59,7 +70,7 @@ async def get_task_status(request):
         )
 
 
-async def download_content(request):
+async def download_content(request: web.Request):
     task_id = int(request.match_info['task_id'])
     try:
         task_repository: ITaskRepository = request.app.get("task_repository")
