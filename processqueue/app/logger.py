@@ -5,7 +5,6 @@ import sys
 from logging import Logger
 
 
-
 class LogRecordFactory(logging.LogRecord):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

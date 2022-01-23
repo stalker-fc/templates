@@ -1,18 +1,13 @@
 import asyncio
 import os
-import signal
 from concurrent.futures import ProcessPoolExecutor
-
-from aiohttp.web import Application
 
 from app.common import Result
 from app.executor import ExecutionConfig
 from app.executor import execute_task as worker_handle_task
 from app.model import TaskStatus
 from app.repository import ITaskRepository
-from app.storage import ExecutorTaskDataStorageConfig
 from app.storage import IExecutorTaskDataStorage
-from app.storage import build_executor_task_data_storage
 
 
 async def handle_task(
@@ -22,7 +17,7 @@ async def handle_task(
         execution_config: ExecutionConfig,
         task_id: int
 ):
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     task = await task_repository.get_task(task_id)
     print(f"handle_task handling task_id={task_id} in process={os.getpid()}")
 
@@ -51,9 +46,9 @@ async def task_queue_listener(
         task_repository: ITaskRepository,
         worker_task_data_storage: IExecutorTaskDataStorage,
         process_pool_executor: ProcessPoolExecutor,
-        worker_config: ExecutionConfig
+        execution_config: ExecutionConfig
 ):
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     while True:
         task_id: int = await task_queue.get()
 
@@ -62,7 +57,7 @@ async def task_queue_listener(
                 task_repository,
                 worker_task_data_storage,
                 process_pool_executor,
-                worker_config,
+                execution_config,
                 task_id
             )
         )
@@ -70,42 +65,3 @@ async def task_queue_listener(
         await task_repository.set_task_status(task_id, TaskStatus.QUEUED)
 
         task_queue.task_done()
-
-
-def register_signal_handler() -> None:
-    signal.signal(signal.SIGSEGV, lambda _, __: print("Mne kapets"))
-
-
-async def task_queue_context(app: Application) -> None:
-    task_queue = asyncio.Queue()
-    app["task_queue"] = task_queue
-    task_repository: ITaskRepository = app.get("task_repository")
-
-    process_pool_executor = ProcessPoolExecutor(
-        initializer=register_signal_handler,
-        max_workers=2
-    )
-
-    worker_task_data_storage_config = ExecutorTaskDataStorageConfig()
-    worker_config = ExecutionConfig(
-        worker_task_data_storage_config
-    )
-    worker_task_data_storage: IExecutorTaskDataStorage = build_executor_task_data_storage(
-        worker_task_data_storage_config
-    )
-
-    loop = asyncio.get_event_loop()
-    input_queue_listener_task = loop.create_task(
-        task_queue_listener(
-            task_queue,
-            task_repository,
-            worker_task_data_storage,
-            process_pool_executor,
-            worker_config,
-        )
-    )
-
-    yield
-
-    input_queue_listener_task.cancel()
-    process_pool_executor.shutdown(wait=True)
