@@ -33,5 +33,5 @@ def execute_task(config: ExecutionConfig, task_id: int) -> Result:
 
         return Result.SUCCESS
     except Exception:
-        logger.exception(f'Unable to handle task_id={task_id}. Traceback: {traceback.format_exc()}.')
+        logger.exception(f"Unable to handle task_id=`{task_id}`. Traceback: {traceback.format_exc()}.")
         return Result.FAILURE

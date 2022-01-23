@@ -5,7 +5,7 @@ from app.domain.model import Task
 
 __all__ = [
     "IRepositoryTaskDataStorage",
-    "DummyRepositoryTaskDataStorage",
+    "InMemoryRepositoryTaskDataStorage",
 ]
 
 
@@ -19,7 +19,7 @@ class IRepositoryTaskDataStorage(abc.ABC):
         pass
 
 
-class DummyRepositoryTaskDataStorage(IRepositoryTaskDataStorage):
+class InMemoryRepositoryTaskDataStorage(IRepositoryTaskDataStorage):
     def __init__(self):
         self._task_id_to_task: Dict[int, Task] = {}
 

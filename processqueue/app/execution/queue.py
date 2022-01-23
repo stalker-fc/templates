@@ -1,5 +1,4 @@
 import asyncio
-import os
 from concurrent.futures import ProcessPoolExecutor
 
 from app.domain.model import TaskStatus
@@ -8,7 +7,9 @@ from app.execution.executor import ExecutionConfig
 from app.execution.executor import execute_task as worker_handle_task
 from app.execution.result import Result
 from app.execution.storage import IExecutorTaskDataStorage
+from app.logger import get_logger
 
+logger = get_logger(__name__)
 
 async def handle_task(
         task_repository: ITaskRepository,
@@ -19,7 +20,6 @@ async def handle_task(
 ):
     loop = asyncio.get_running_loop()
     task = await task_repository.get_task(task_id)
-    print(f"handle_task handling task_id={task_id} in process={os.getpid()}")
 
     executor_task_data_storage.set_input_data(task.task_id, task.input_data)
 
@@ -33,11 +33,12 @@ async def handle_task(
     await task_repository.set_task_status(task_id, TaskStatus.RUNNING)
 
     if result is Result.SUCCESS:
-        print("SUCCESS")
+        logger.info(f"Execution of task id=`{task_id}` is completed successfully.")
         await task_repository.set_task_status(task_id, TaskStatus.SUCCESS)
-        await task_repository.add_task_output_data(task_id, "it`s ok")
+        output_data = executor_task_data_storage.get_output_data(task_id)
+        await task_repository.add_task_output_data(task_id, output_data)
     else:
-        print("FAILURE")
+        logger.info(f"Execution of task id=`{task_id}` is failed.")
         await task_repository.set_task_status(task_id, TaskStatus.FAILURE)
 
 
@@ -51,7 +52,7 @@ async def task_queue_listener(
     loop = asyncio.get_running_loop()
     while True:
         task_id: int = await task_queue.get()
-
+        logger.info(f"Received task id=`{task_id}`.")
         loop.create_task(
             handle_task(
                 task_repository,
@@ -63,7 +64,6 @@ async def task_queue_listener(
         )
 
         await task_repository.set_task_status(task_id, TaskStatus.QUEUED)
-
         task_queue.task_done()
 
 

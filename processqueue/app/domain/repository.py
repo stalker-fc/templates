@@ -3,7 +3,7 @@ from typing import Optional
 
 from app.domain.model import Task
 from app.domain.model import TaskStatus
-from app.domain.storage import DummyRepositoryTaskDataStorage
+from app.domain.storage import InMemoryRepositoryTaskDataStorage
 from app.domain.storage import IRepositoryTaskDataStorage
 
 
@@ -42,7 +42,7 @@ class ITaskRepository(abc.ABC):
         pass
 
 
-class DummyTaskRepository(ITaskRepository):
+class InMemoryTaskRepository(ITaskRepository):
     def __init__(self, task_data_storage: IRepositoryTaskDataStorage):
         self._counter = 0
         self._task_data_storage = task_data_storage
@@ -85,5 +85,5 @@ class DummyTaskRepository(ITaskRepository):
 
 
 def build_task_repository() -> ITaskRepository:
-    repository_task_data_storage = DummyRepositoryTaskDataStorage()
-    return DummyTaskRepository(repository_task_data_storage)
+    repository_task_data_storage = InMemoryRepositoryTaskDataStorage()
+    return InMemoryTaskRepository(repository_task_data_storage)
