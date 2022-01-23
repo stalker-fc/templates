@@ -30,7 +30,7 @@ def configure_routes(app: web.Application) -> None:
     app.add_routes(routes)
 
 
-def startup_app():
+def build_app():
     app = web.Application()
 
     configure_dependencies(app)

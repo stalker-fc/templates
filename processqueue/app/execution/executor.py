@@ -3,7 +3,7 @@ import time
 import traceback
 from dataclasses import dataclass
 
-from app.common.logger import get_logger
+from app.logger import get_logger
 from app.execution.result import Result
 from app.execution.storage import ExecutorTaskDataStorageConfig
 from app.execution.storage import build_executor_task_data_storage

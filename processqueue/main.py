@@ -1,6 +1,6 @@
-from app.app import startup_app
+from app import build_app
 
-app = startup_app()
+app = build_app()
 
 if __name__ == '__main__':
     from aiohttp import web
