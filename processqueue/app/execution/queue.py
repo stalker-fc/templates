@@ -1,7 +1,8 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
+from typing import Set
 
-from app.domain.model import TaskStatus
+from app.domain.data import TaskStatus
 from app.domain.repository import ITaskRepository
 from app.execution.executor import ExecutionConfig
 from app.execution.executor import execute_task as worker_handle_task
@@ -46,24 +47,30 @@ async def task_queue_listener(
         task_repository: ITaskRepository,
         worker_task_data_storage: IExecutorTaskDataStorage,
         process_pool_executor: ProcessPoolExecutor,
-        execution_config: ExecutionConfig
+        execution_config: ExecutionConfig,
+        n_running_tasks: int = 2
 ):
     loop = asyncio.get_running_loop()
-    while True:
-        task_id: int = await task_queue.get()
-        logger.info(f"Received task id=`{task_id}`.")
-        loop.create_task(
-            handle_task(
-                task_repository,
-                worker_task_data_storage,
-                process_pool_executor,
-                execution_config,
-                task_id
-            )
-        )
+    running_tasks: Set[int] = set()
 
-        await task_repository.set_task_status(task_id, TaskStatus.QUEUED)
-        task_queue.task_done()
+    while True:
+        if len(running_tasks) < n_running_tasks:
+            task_id: int = await task_queue.get()
+
+            logger.info(f"Received task id=`{task_id}`.")
+            await task_repository.set_task_status(task_id, TaskStatus.QUEUED)
+            task = loop.create_task(
+                handle_task(
+                    task_repository,
+                    worker_task_data_storage,
+                    process_pool_executor,
+                    execution_config,
+                    task_id
+                )
+            )
+            task_queue.task_done()
+
+
 
 
 def build_task_queue() -> asyncio.Queue:

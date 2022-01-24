@@ -1,7 +1,7 @@
 import abc
 from typing import Dict
 
-from app.domain.model import Task
+from app.domain.data import Task
 
 __all__ = [
     "IRepositoryTaskDataStorage",
