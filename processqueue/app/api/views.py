@@ -48,9 +48,7 @@ async def run_task(request: web.Request):
     if is_task_exists:
         run_message = RunTaskMessage(task_id)
         task_message_queue: asyncio.Queue = request.app.get("task_message_queue")
-        await task_message_queue.put(run_message)
-        await task_message_queue.put(run_message)
-        await task_message_queue.put(run_message)
+        await task_repository.set_task_status(task_id, TaskStatus.QUEUED)
         await task_message_queue.put(run_message)
 
         return web.Response(
