@@ -5,8 +5,6 @@ from typing import Optional
 from dataclasses_json import dataclass_json
 
 
-
-
 class TaskStatus(Enum):
     CREATED = "CREATED"
     QUEUED = "QUEUED"

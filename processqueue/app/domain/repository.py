@@ -5,6 +5,7 @@ from app.domain.data import Task
 from app.domain.data import TaskStatus
 from app.domain.storage import IRepositoryTaskDataStorage
 from app.domain.storage import InMemoryRepositoryTaskDataStorage
+from app.exceptions import NoSuchTaskException
 from app.logger import get_logger
 
 logger = get_logger(__name__)
@@ -14,7 +15,13 @@ __all__ = [
     "ITaskRepository"
 ]
 
+
 class ITaskRepository(abc.ABC):
+
+    @abc.abstractmethod
+    async def is_task_exists(self, task_id: int) -> bool:
+        pass
+
     @abc.abstractmethod
     async def create_task(self, input_data: str) -> Task:
         pass
@@ -48,6 +55,13 @@ class InMemoryTaskRepository(ITaskRepository):
     def __init__(self, task_data_storage: IRepositoryTaskDataStorage):
         self._counter = 0
         self._task_data_storage = task_data_storage
+
+    async def is_task_exists(self, task_id: int) -> bool:
+        try:
+            _ = await self._task_data_storage.get_task(task_id)
+            return True
+        except NoSuchTaskException:
+            return False
 
     async def create_task(self, input_data: str) -> Task:
         task = Task(

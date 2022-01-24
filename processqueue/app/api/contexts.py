@@ -14,7 +14,7 @@ from app.execution.storage import build_executor_task_data_storage
 
 
 async def task_queue_context(app: web.Application) -> None:
-    task_queue: asyncio.Queue = app.get("task_queue")
+    task_message_queue: asyncio.Queue = app.get("task_message_queue")
     task_repository: ITaskRepository = app.get("task_repository")
 
     process_pool_executor = ProcessPoolExecutor(
@@ -30,9 +30,9 @@ async def task_queue_context(app: web.Application) -> None:
     )
 
     loop = asyncio.get_running_loop()
-    input_queue_listener_task = loop.create_task(
+    task_message_queue_listener = loop.create_task(
         task_queue_listener(
-            task_queue,
+            task_message_queue,
             task_repository,
             worker_task_data_storage,
             process_pool_executor,
@@ -42,5 +42,5 @@ async def task_queue_context(app: web.Application) -> None:
 
     yield
 
-    input_queue_listener_task.cancel()
+    task_message_queue_listener.cancel()
     process_pool_executor.shutdown(wait=True)
