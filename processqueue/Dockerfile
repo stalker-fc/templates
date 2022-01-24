@@ -60,8 +60,9 @@ COPY /app ./app
 COPY /tests ./tests
 
 ENTRYPOINT ["python", "-m", "pytest", "tests/"]
-# ---------------------------------------------------------------
 
+# ---------------------------------------------------------------
+# image for app
 FROM base AS app
 
 USER $APP_USER
