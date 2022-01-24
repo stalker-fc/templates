@@ -25,8 +25,8 @@ def configure_routes(app: web.Application) -> None:
         web.post("/tasks/create", create_task),
         web.post("/tasks/run", run_task),
         web.post("/tasks/cancel", cancel_task),
-        web.get("/status/{task_id:[0-9]+}", get_task_status, allow_head=False),
-        web.get("/download/{task_id:[0-9]+}", get_task_output_data, allow_head=False),
+        web.get("/tasks/{task_id:[0-9]+}/status", get_task_status, allow_head=False),
+        web.get("/tasks/{task_id:[0-9]+}/output", get_task_output_data, allow_head=False),
     ]
 
     app.add_routes(routes)

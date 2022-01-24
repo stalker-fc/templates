@@ -4,8 +4,6 @@ from aiohttp import web
 
 from app.domain.data import TaskStatus
 from app.domain.repository import ITaskRepository
-from app.domain.service import CancelTaskMessage
-from app.domain.service import RunTaskMessage
 from app.exceptions import NoSuchTaskException
 
 
@@ -46,10 +44,9 @@ async def run_task(request: web.Request):
     task_repository: ITaskRepository = request.app.get("task_repository")
     is_task_exists = await task_repository.is_task_exists(task_id)
     if is_task_exists:
-        run_message = RunTaskMessage(task_id)
         task_message_queue: asyncio.Queue = request.app.get("task_message_queue")
         await task_repository.set_task_status(task_id, TaskStatus.QUEUED)
-        await task_message_queue.put(run_message)
+        await task_message_queue.put(task_id)
 
         return web.Response(
             status=200,
@@ -83,10 +80,8 @@ async def cancel_task(request: web.Request):
     task_repository: ITaskRepository = request.app.get("task_repository")
     status = await task_repository.get_task_status(task_id)
 
-    if status is TaskStatus.QUEUED or status is TaskStatus.RUNNING:
-        cancel_message = CancelTaskMessage(task_id)
-        task_message_queue: asyncio.Queue = request.app.get("task_message_queue")
-        await task_message_queue.put(cancel_message)
+    if status is TaskStatus.QUEUED:
+        await task_repository.set_task_status(task_id, TaskStatus.CANCELLED)
 
         return web.Response(
             status=200,

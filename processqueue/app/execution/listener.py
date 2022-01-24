@@ -1,13 +1,8 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass
-from typing import List
-from typing import Union
 
 from app.domain.data import TaskStatus
 from app.domain.repository import ITaskRepository
-from app.domain.service import CancelTaskMessage
-from app.domain.service import RunTaskMessage
 from app.execution.executor import ExecutionConfig
 from app.execution.handler import handle_cpu_bound_task
 from app.execution.storage import IExecutorTaskDataStorage
@@ -16,71 +11,48 @@ from app.logger import get_logger
 logger = get_logger(__name__)
 
 
-@dataclass
-class RunningTask:
-    task_id: int
-    task: asyncio.Task
+class RunningTasksCounter:
+    def __init__(self, max_running_tasks: int):
+        self._max_running_tasks = max_running_tasks
+        self._current_running_tasks = 0
+
+    def can_run_one_more_task(self) -> bool:
+        return self._current_running_tasks < self._max_running_tasks
+
+    def run_new_task(self):
+        self._current_running_tasks += 1
+
+    def finish_task(self):
+        self._current_running_tasks -= 1
 
 
-@dataclass
-class QueuedTask:
-    task_id: int
-
-
-class TaskMessageQueueListener:
-    def __init__(
-        self,
-        task_message_queue: asyncio.Queue,
+async def task_queue_listener(
+        task_queue: asyncio.Queue,
         task_repository: ITaskRepository,
-        executor_task_data_storage: IExecutorTaskDataStorage,
+        worker_task_data_storage: IExecutorTaskDataStorage,
         process_pool_executor: ProcessPoolExecutor,
         execution_config: ExecutionConfig,
         max_running_tasks: int
-    ):
-        self._task_message_queue = task_message_queue
-        self._task_repository = task_repository
-        self._executor_task_data_storage = executor_task_data_storage
-        self._process_pool_executor = process_pool_executor
-        self._execution_config = execution_config
-        self._max_running_tasks = max_running_tasks
-
-        self._running_tasks: List[RunningTask] = []
-        self._queued_tasks: List[QueuedTask] = []
-
-
-    async def listen(self):
-        while True:
-            message: Union[RunTaskMessage, CancelTaskMessage] = await self._task_message_queue.get()
-
-            if isinstance(message, RunTaskMessage):
-
-
-                if len(self._running_tasks) < self._max_running_tasks:
-                    await self._run(message.task_id)
-                else:
-                    self._queued_tasks.append(QueuedTask(message.task_id))
-
-            elif isinstance(message, CancelTaskMessage):
-
-                await self._task_repository.set_task_status(message.task_id, TaskStatus.CANCELLED)
-
-
-
-    async def _run(self, task_id: int):
-        loop = asyncio.get_running_loop()
-        task = loop.create_task(
-            handle_cpu_bound_task(
-                self._task_repository,
-                self._executor_task_data_storage,
-                self._process_pool_executor,
-                self._execution_config,
-                task_id
-            )
-        )
-        running_task = RunningTask(
-            task_id=task_id,
-            task=task
-        )
-        self._running_tasks.append(running_task)
-
-
+) -> None:
+    loop = asyncio.get_running_loop()
+    running_tasks_counter = RunningTasksCounter(max_running_tasks)
+    while True:
+        if running_tasks_counter.can_run_one_more_task():
+            task_id: int = await task_queue.get()
+            logger.info(f"Received task id=`{task_id}`.")
+            task_status: TaskStatus = await task_repository.get_task_status(task_id)
+            if task_status is TaskStatus.QUEUED:
+                running_tasks_counter.run_new_task()
+                running_task = loop.create_task(
+                    handle_cpu_bound_task(
+                        task_repository,
+                        worker_task_data_storage,
+                        process_pool_executor,
+                        execution_config,
+                        task_id
+                    )
+                )
+                running_task.add_done_callback(lambda _: running_tasks_counter.finish_task())
+            task_queue.task_done()
+        else:
+            await asyncio.sleep(2.)
