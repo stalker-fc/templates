@@ -1,8 +1,8 @@
 import abc
 from typing import Optional
 
-from app.domain.data import Task
-from app.domain.data import TaskStatus
+from app.domain.model import Task
+from app.domain.model import TaskStatus
 from app.domain.storage import IRepositoryTaskDataStorage
 from app.domain.storage import InMemoryRepositoryTaskDataStorage
 from app.exceptions import NoSuchTaskException

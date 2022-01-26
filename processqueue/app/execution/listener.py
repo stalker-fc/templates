@@ -1,7 +1,7 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
 
-from app.domain.data import TaskStatus
+from app.domain.model import TaskStatus
 from app.domain.repository import ITaskRepository
 from app.execution.executor import ExecutionConfig
 from app.execution.handler import handle_cpu_bound_task

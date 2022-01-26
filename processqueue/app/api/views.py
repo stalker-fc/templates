@@ -2,19 +2,14 @@ import asyncio
 
 from aiohttp import web
 
-from app.domain.data import TaskStatus
+from app.api.responses import HealthCheckResponse
+from app.domain.model import TaskStatus
 from app.domain.repository import ITaskRepository
 from app.exceptions import NoSuchTaskException
 
 
-async def healthcheck(_: web.Request) -> web.Response:
-    return web.Response(
-        status=200,
-        headers={
-            "content-type": "plain/text"
-        },
-        body=str("I`m alive.")
-    )
+async def healthcheck(_: web.Request) -> HealthCheckResponse:
+    return HealthCheckResponse()
 
 
 async def create_task(request: web.Request):
