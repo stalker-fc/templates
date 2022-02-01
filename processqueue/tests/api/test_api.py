@@ -1,7 +1,5 @@
-import json
-from typing import Dict
-
 import pytest
+from typing import Dict
 
 
 async def test_index(client):
