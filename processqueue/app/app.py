@@ -11,7 +11,6 @@ from app.api.views import create_task
 from app.api.views import run_task
 from app.domain.repository import build_task_repository
 from app.execution.executor import ExecutionConfig
-from app.execution.queue import build_long_task_queue
 from app.execution.queue import build_task_queue
 from app.execution.storage import ExecutorTaskDataStorageConfig
 
@@ -20,8 +19,7 @@ def configure_dependencies(app: web.Application) -> None:
     app["max_running_tasks"] = int(os.getenv("MAX_RUNNING_TASKS", "2"))
     app["executor_task_data_storage_config"] = ExecutorTaskDataStorageConfig()
     app["execution_config"] = ExecutionConfig(app["executor_task_data_storage_config"])
-    app["task_message_queue"] = build_task_queue()
-    app["long_task_message_queue"] = build_long_task_queue()
+    app["task_queue"] = build_task_queue()
     app["task_repository"] = build_task_repository()
 
 
