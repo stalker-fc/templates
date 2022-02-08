@@ -1,6 +1,8 @@
 from aiohttp import web
 
+from app.api.model import Error
 from app.api.model import TaskInfo
+from app.api.serialization import serialize
 
 HTTP_STATUS_OK = 200
 HTTP_STATUS_CREATED = 201
@@ -22,7 +24,6 @@ class HealthCheckResponse(web.Response):
         )
 
 
-
 class CreateTaskResponse(web.Response):
     def __init__(self, task_info: TaskInfo):
         super().__init__(
@@ -30,30 +31,36 @@ class CreateTaskResponse(web.Response):
             headers={
                 "content-type": CONTENT_TYPE_APPLICATION_JSON
             },
-            body=TaskInfo.schema().dumps(task_info)
+            body=serialize(task_info)
         )
-
-
 
 
 class BaseErrorResponse(web.Response):
-    def __init__(self, task_id: int):
+    def __init__(self, error: Error):
         super().__init__(
-            status=HTTP_STATUS_NOT_FOUND,
+            status=error.code,
             headers={
                 "content-type": CONTENT_TYPE_APPLICATION_JSON
             },
-            body="Hello! I`m OK."
+            body=serialize(error)
         )
 
 
-class NoSuchTaskResponse(web.Response):
+class NoSuchTaskResponse(BaseErrorResponse):
     def __init__(self, task_id: int):
-        super().__init__(
-            status=HTTP_STATUS_NOT_FOUND,
-            headers={
-                "content-type": CONTENT_TYPE_APPLICATION_JSON
-            },
-            body="Hello! I`m OK."
+        error = Error(
+            code=HTTP_STATUS_NOT_FOUND,
+            message=f"There is no task with such id=`{task_id}`",
+            description=None
         )
+        super().__init__(error)
 
+
+class NoTaskOutputDataResponse(BaseErrorResponse):
+    def __init__(self, task_id: int):
+        error = Error(
+            code=HTTP_STATUS_BAD_REQUEST,
+            message=f"There is no task with such id=`{task_id}`",
+            description=None
+        )
+        super().__init__(error)

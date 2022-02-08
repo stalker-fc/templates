@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from dataclasses_json import dataclass_json
 
@@ -23,3 +24,9 @@ class TaskOutputData:
     output_data: str
 
 
+@dataclass_json
+@dataclass
+class Error:
+    code: int
+    message: str
+    description: Optional[str] = None
