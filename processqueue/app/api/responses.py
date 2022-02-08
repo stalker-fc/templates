@@ -2,6 +2,7 @@ from aiohttp import web
 
 from app.api.model import Error
 from app.api.model import TaskInfo
+from app.api.model import TaskOutputData
 from app.api.serialization import serialize
 
 HTTP_STATUS_OK = 200
@@ -35,6 +36,28 @@ class CreateTaskResponse(web.Response):
         )
 
 
+class TaskInfoResponse(web.Response):
+    def __init__(self, task_info: TaskInfo):
+        super().__init__(
+            status=HTTP_STATUS_OK,
+            headers={
+                "content-type": CONTENT_TYPE_APPLICATION_JSON
+            },
+            body=serialize(task_info)
+        )
+
+
+class TaskOutputDataResponse(web.Response):
+    def __init__(self, task_output_data: TaskOutputData):
+        super().__init__(
+            status=HTTP_STATUS_OK,
+            headers={
+                "content-type": CONTENT_TYPE_APPLICATION_JSON
+            },
+            body=serialize(task_output_data)
+        )
+
+
 class BaseErrorResponse(web.Response):
     def __init__(self, error: Error):
         super().__init__(
@@ -51,6 +74,16 @@ class NoSuchTaskResponse(BaseErrorResponse):
         error = Error(
             code=HTTP_STATUS_NOT_FOUND,
             message=f"There is no task with such id=`{task_id}`",
+            description=None
+        )
+        super().__init__(error)
+
+
+class IncorrectTaskOperationResponse(BaseErrorResponse):
+    def __init__(self, task_id: int):
+        error = Error(
+            code=HTTP_STATUS_BAD_REQUEST,
+            message=f"Task id=`{task_id}` has incorrect status for handling this operation.",
             description=None
         )
         super().__init__(error)
