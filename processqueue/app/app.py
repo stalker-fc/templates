@@ -4,25 +4,43 @@ from aiohttp import web
 
 from app.api.contexts import task_queue_context
 from app.api.views import cancel_task
+from app.api.views import create_task
 from app.api.views import get_task_output_data
 from app.api.views import get_task_status
 from app.api.views import healthcheck
-from app.api.views import create_task
 from app.api.views import run_task
 from app.data import build_task_repository
+from app.domain.listener import ITaskQueueListener
 from app.domain.queue import ITaskQueue
 from app.domain.repository import ITaskRepository
 from app.execution.executor import ExecutionConfig
+from app.execution.listener import ListenerConfig
+from app.execution.listener import build_task_queue_listener
 from app.execution.queue import build_task_queue
 from app.execution.storage import ExecutorTaskDataStorageConfig
 
 
 def configure_dependencies(app: web.Application) -> None:
-    app["max_running_tasks"] = int(os.getenv("MAX_RUNNING_TASKS", "2"))
-    app["executor_task_data_storage_config"] = ExecutorTaskDataStorageConfig()
-    app["execution_config"] = ExecutionConfig(app["executor_task_data_storage_config"])
-    app["task_queue"]: ITaskQueue = build_task_queue()
-    app["task_repository"]: ITaskRepository = build_task_repository()
+    max_running_tasks = int(os.getenv("MAX_RUNNING_TASKS", "2"))
+    executor_task_data_storage_config = ExecutorTaskDataStorageConfig()
+    execution_config = ExecutionConfig(executor_task_data_storage_config)
+    listener_config = ListenerConfig(
+        execution_config=execution_config,
+        max_running_tasks=max_running_tasks,
+    )
+
+    task_repository: ITaskRepository = build_task_repository()
+    task_queue: ITaskQueue = build_task_queue()
+
+    task_queue_listener: ITaskQueueListener = build_task_queue_listener(
+        task_repository,
+        task_queue,
+        listener_config
+    )
+
+    app["task_queue"] = task_queue
+    app["task_repository"] = task_repository
+    app["task_queue_listener"] = task_queue_listener
 
 
 def configure_context(app: web.Application) -> None:

@@ -32,6 +32,10 @@ class TaskQueue(ITaskQueue):
     async def is_task_cancelled(self, task_id: int) -> bool:
         return task_id in self._cancelled_tasks
 
+    async def is_empty(self) -> bool:
+        return self._queue.empty()
 
-def build_task_queue() -> asyncio.Queue:
-    return asyncio.Queue()
+
+
+def build_task_queue() -> ITaskQueue:
+    return TaskQueue()

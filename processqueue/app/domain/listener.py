@@ -13,3 +13,7 @@ class ITaskQueueListener(abc.ABC):
     @abc.abstractmethod
     async def listen(self):
         pass
+
+    @abc.abstractmethod
+    def stop(self):
+        pass
