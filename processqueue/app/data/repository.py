@@ -12,6 +12,7 @@ __all__ = [
     "build_task_repository"
 ]
 
+
 class InMemoryTaskRepository(ITaskRepository):
     def __init__(self, task_data_storage: IRepositoryTaskDataStorage):
         self._counter = 0

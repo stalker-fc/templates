@@ -1,5 +1,3 @@
-import asyncio
-
 from aiohttp import web
 
 from app.api import controller
@@ -11,6 +9,7 @@ from app.api.responses import NoSuchTaskResponse
 from app.api.responses import TaskInfoResponse
 from app.api.responses import TaskOutputDataResponse
 from app.api.serialization import deserialize
+from app.domain.queue import ITaskQueue
 from app.domain.repository import ITaskRepository
 from app.exceptions import IncorrectTaskOperationException
 from app.exceptions import NoSuchTaskException
@@ -31,7 +30,7 @@ async def create_task(request: web.Request):
 async def run_task(request: web.Request):
     data = await request.json()
     task_id = data.get("task_id", "")
-    task_queue: asyncio.Queue = request.app.get("task_queue")
+    task_queue: ITaskQueue = request.app.get("task_queue")
     task_repository: ITaskRepository = request.app.get("task_repository")
     try:
         task_info = await controller.run_task(task_repository, task_queue, task_id)
@@ -45,9 +44,10 @@ async def run_task(request: web.Request):
 async def cancel_task(request: web.Request):
     data = await request.json()
     task_id = data.get("task_id", "")
+    task_queue: ITaskQueue = request.app.get("task_queue")
     task_repository: ITaskRepository = request.app.get("task_repository")
     try:
-        task_info = await controller.cancel_task(task_repository, task_id)
+        task_info = await controller.cancel_task(task_repository, task_queue, task_id)
         return TaskInfoResponse(task_info)
     except NoSuchTaskException:
         return NoSuchTaskResponse(task_id)

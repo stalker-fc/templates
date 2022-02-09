@@ -20,7 +20,7 @@ class ITaskQueue(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def cancel(self, task_id: int) -> int:
+    async def cancel(self, task_id: int) -> None:
         pass
 
     @abc.abstractmethod

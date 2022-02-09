@@ -1,6 +1,7 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
 
+from app.domain.queue import ITaskQueue
 from app.domain.repository import ITaskRepository
 from app.execution.executor import ExecutionConfig
 from app.execution.handler import handle_cpu_bound_task
@@ -26,7 +27,7 @@ class RunningTasksCounter:
 
 
 async def task_queue_listener(
-        task_queue: asyncio.Queue,
+        task_queue: ITaskQueue,
         task_repository: ITaskRepository,
         executor_task_data_storage: IExecutorTaskDataStorage,
         process_pool_executor: ProcessPoolExecutor,
@@ -39,19 +40,21 @@ async def task_queue_listener(
         if running_tasks_counter.can_run_one_more_task():
             task_id: int = await task_queue.get()
             logger.info(f"Received task id=`{task_id}`.")
-            task_cancellation_token = await task_repository.get_task_cancellation_token(task_id)
-            if task_cancellation_token is None:
-                running_tasks_counter.run_new_task()
-                running_task = loop.create_task(
-                    handle_cpu_bound_task(
-                        task_repository,
-                        executor_task_data_storage,
-                        process_pool_executor,
-                        execution_config,
-                        task_id
-                    )
+            is_task_cancelled = await task_queue.is_task_cancelled(task_id)
+            if is_task_cancelled:
+                continue
+
+            running_tasks_counter.run_new_task()
+            running_task = loop.create_task(
+                handle_cpu_bound_task(
+                    task_repository,
+                    executor_task_data_storage,
+                    process_pool_executor,
+                    execution_config,
+                    task_id
                 )
-                running_task.add_done_callback(lambda _: running_tasks_counter.finish_task())
-            task_queue.task_done()
+            )
+            running_task.add_done_callback(lambda _: running_tasks_counter.finish_task())
+
         else:
             await asyncio.sleep(2.)
