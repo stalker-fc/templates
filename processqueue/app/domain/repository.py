@@ -1,11 +1,10 @@
 import abc
-from typing import Optional
 
 from app.domain.model import Task
 from app.domain.model import TaskStatus
 from app.domain.storage import IRepositoryTaskDataStorage
 from app.domain.storage import InMemoryRepositoryTaskDataStorage
-from app.exceptions import NoSuchTaskException
+from app.exceptions import NoTaskOutputDataException
 from app.logger import get_logger
 
 logger = get_logger(__name__)
@@ -17,10 +16,6 @@ __all__ = [
 
 
 class ITaskRepository(abc.ABC):
-
-    @abc.abstractmethod
-    async def is_task_exists(self, task_id: int) -> bool:
-        pass
 
     @abc.abstractmethod
     async def create_task(self, input_data: str) -> Task:
@@ -56,13 +51,6 @@ class InMemoryTaskRepository(ITaskRepository):
         self._counter = 0
         self._task_data_storage = task_data_storage
 
-    async def is_task_exists(self, task_id: int) -> bool:
-        try:
-            _ = await self._task_data_storage.get_task(task_id)
-            return True
-        except NoSuchTaskException:
-            return False
-
     async def create_task(self, input_data: str) -> Task:
         task = Task(
             task_id=self._counter,
@@ -96,8 +84,11 @@ class InMemoryTaskRepository(ITaskRepository):
         task = await self._task_data_storage.get_task(task_id)
         return task.input_data
 
-    async def get_task_output_data(self, task_id: int) -> Optional[str]:
+    async def get_task_output_data(self, task_id: int) -> str:
         task = await self._task_data_storage.get_task(task_id)
+        if task.output_data is None:
+            raise NoTaskOutputDataException(task_id)
+
         return task.output_data
 
 

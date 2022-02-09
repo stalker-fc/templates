@@ -8,6 +8,8 @@ __all__ = [
     "InMemoryRepositoryTaskDataStorage",
 ]
 
+from app.exceptions import NoSuchTaskException
+
 
 class IRepositoryTaskDataStorage(abc.ABC):
     @abc.abstractmethod
@@ -24,7 +26,10 @@ class InMemoryRepositoryTaskDataStorage(IRepositoryTaskDataStorage):
         self._task_id_to_task: Dict[int, Task] = {}
 
     async def get_task(self, task_id: int) -> Task:
-        return self._task_id_to_task[task_id]
+        try:
+            return self._task_id_to_task[task_id]
+        except KeyError:
+            raise NoSuchTaskException(task_id)
 
     async def put_task(self, task: Task):
         self._task_id_to_task[task.task_id] = task
