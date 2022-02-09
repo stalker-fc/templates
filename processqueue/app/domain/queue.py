@@ -26,3 +26,7 @@ class ITaskQueue(abc.ABC):
     @abc.abstractmethod
     async def is_task_cancelled(self, task_id: int) -> bool:
         pass
+
+    @abc.abstractmethod
+    async def is_empty(self) -> bool:
+        pass
