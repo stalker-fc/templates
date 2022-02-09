@@ -1,15 +1,24 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
+from dataclasses import dataclass
+from multiprocessing import Process
 
 from app.domain.model import TaskStatus
 from app.domain.repository import ITaskRepository
 from app.execution.executor import ExecutionConfig
+from app.execution.executor import execute_long_task
 from app.execution.executor import execute_task
 from app.execution.result import Result
 from app.execution.storage import IExecutorTaskDataStorage
 from app.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+@dataclass
+class TaskExecutionProcess:
+    task_id: int
+    process: Process
 
 
 async def handle_cpu_bound_task(
@@ -48,3 +57,31 @@ async def handle_cpu_bound_task(
     else:
         logger.info(f"Execution of task id=`{task_id}` is failed.")
         await task_repository.set_task_status(task_id, TaskStatus.FAILURE)
+
+
+async def handle_long_cpu_bound_task(
+        task_repository: ITaskRepository,
+        executor_task_data_storage: IExecutorTaskDataStorage,
+        execution_config: ExecutionConfig,
+        task_id: int
+) -> TaskExecutionProcess:
+    task = await task_repository.get_task(task_id)
+
+    executor_task_data_storage.set_input_data(task.task_id, task.input_data)
+
+    await task_repository.set_task_status(task_id, TaskStatus.RUNNING)
+
+    args = (
+        execution_config,
+        task_id,
+    )
+    process = Process(target=execute_long_task, args=args)
+
+    task_execution_process = TaskExecutionProcess(
+        task_id,
+        process,
+    )
+
+    process.start()
+
+    return task_execution_process
