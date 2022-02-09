@@ -4,6 +4,7 @@ from app.api.model import TaskInfo
 from app.api.model import TaskInputData
 from app.api.model import TaskOutputData
 from app.domain.model import TaskStatus
+from app.domain.queue import ITaskQueue
 from app.domain.repository import ITaskRepository
 from app.exceptions import IncorrectTaskOperationException
 
@@ -16,7 +17,7 @@ async def create_task(task_repository: ITaskRepository, task_input_data: TaskInp
     )
 
 
-async def run_task(task_repository: ITaskRepository, task_queue: asyncio.Queue, task_id: int) -> TaskInfo:
+async def run_task(task_repository: ITaskRepository, task_queue: ITaskQueue, task_id: int) -> TaskInfo:
     task_status = await task_repository.get_task_status(task_id)
     if task_status is TaskStatus.CREATED or task_status is TaskStatus.CANCELLED:
         await task_repository.set_task_status(task_id, TaskStatus.QUEUED)
@@ -29,13 +30,14 @@ async def run_task(task_repository: ITaskRepository, task_queue: asyncio.Queue, 
         raise IncorrectTaskOperationException(task_id)
 
 
-async def cancel_task(task_repository: ITaskRepository, task_id: int) -> TaskInfo:
+async def cancel_task(task_repository: ITaskRepository, task_queue: ITaskQueue, task_id: int) -> TaskInfo:
     status = await task_repository.get_task_status(task_id)
     if status is TaskStatus.QUEUED:
-        await task_repository.set_task_status(task_id, TaskStatus.CANCELLED)
+        await task_repository
+        status = await task_repository.get_task_status(task_id)
         return TaskInfo(
             task_id=task_id,
-            status=TaskStatus.CANCELLED.value
+            status=status.value
         )
     else:
         raise IncorrectTaskOperationException(task_id)

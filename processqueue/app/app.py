@@ -9,7 +9,9 @@ from app.api.views import get_task_status
 from app.api.views import healthcheck
 from app.api.views import create_task
 from app.api.views import run_task
-from app.domain.repository import build_task_repository
+from app.data import build_task_repository
+from app.domain.queue import ITaskQueue
+from app.domain.repository import ITaskRepository
 from app.execution.executor import ExecutionConfig
 from app.execution.queue import build_task_queue
 from app.execution.storage import ExecutorTaskDataStorageConfig
@@ -19,8 +21,8 @@ def configure_dependencies(app: web.Application) -> None:
     app["max_running_tasks"] = int(os.getenv("MAX_RUNNING_TASKS", "2"))
     app["executor_task_data_storage_config"] = ExecutorTaskDataStorageConfig()
     app["execution_config"] = ExecutionConfig(app["executor_task_data_storage_config"])
-    app["task_queue"] = build_task_queue()
-    app["task_repository"] = build_task_repository()
+    app["task_queue"]: ITaskQueue = build_task_queue()
+    app["task_repository"]: ITaskRepository = build_task_repository()
 
 
 def configure_context(app: web.Application) -> None:
