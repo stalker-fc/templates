@@ -11,18 +11,18 @@ from app.logger import get_logger
 logger = get_logger(__name__)
 
 
-class RunningTasksCounter:
+class RunningTasksObserver:
     def __init__(self, max_running_tasks: int):
         self._max_running_tasks = max_running_tasks
         self._current_running_tasks = 0
 
-    def can_run_one_more_task(self) -> bool:
+    def has_available_slot(self) -> bool:
         return self._current_running_tasks < self._max_running_tasks
 
-    def run_new_task(self):
+    def take_slot(self):
         self._current_running_tasks += 1
 
-    def finish_task(self):
+    def return_slot(self):
         self._current_running_tasks -= 1
 
 
@@ -35,16 +35,17 @@ async def task_queue_listener(
         max_running_tasks: int
 ) -> None:
     loop = asyncio.get_running_loop()
-    running_tasks_counter = RunningTasksCounter(max_running_tasks)
+    running_tasks_observer = RunningTasksObserver(max_running_tasks)
     while True:
-        if running_tasks_counter.can_run_one_more_task():
+        if running_tasks_observer.has_available_slot():
             task_id: int = await task_queue.get()
             logger.info(f"Received task id=`{task_id}`.")
+
             is_task_cancelled = await task_queue.is_task_cancelled(task_id)
             if is_task_cancelled:
                 continue
 
-            running_tasks_counter.run_new_task()
+            running_tasks_observer.take_slot()
             running_task = loop.create_task(
                 handle_cpu_bound_task(
                     task_repository,
@@ -54,7 +55,7 @@ async def task_queue_listener(
                     task_id
                 )
             )
-            running_task.add_done_callback(lambda _: running_tasks_counter.finish_task())
+            running_task.add_done_callback(lambda _: running_tasks_observer.return_slot())
 
         else:
             await asyncio.sleep(2.)
