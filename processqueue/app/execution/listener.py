@@ -94,7 +94,7 @@ class LongTaskQueueListener(ITaskQueueListener):
         self._running_tasks_observer = RunningTasksObserver(self._config.max_running_tasks)
         self._running_tasks: List[TaskExecutionProcess] = []
 
-    def listen(self):
+    async def listen(self):
         while True:
             if len(self._running_tasks) < self._config.max_running_tasks \
                     and not self._task_queue.is_empty():
@@ -143,7 +143,7 @@ def build_task_queue_listener(
     task_queue: ITaskQueue,
     config: ListenerConfig
 ) -> ITaskQueueListener:
-    return TaskQueueListener(
+    return LongTaskQueueListener(
         task_repository,
         task_queue,
         config
