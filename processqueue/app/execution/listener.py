@@ -60,7 +60,7 @@ class TaskQueueListener(ITaskQueueListener):
                 task_id: int = await self._task_queue.get()
                 logger.info(f"Received task id=`{task_id}`.")
 
-                is_task_cancelled = await self._task_queue.is_task_cancelled(task_id)
+                is_task_cancelled = self._task_queue.is_task_cancelled(task_id)
                 if is_task_cancelled:
                     continue
 
@@ -96,23 +96,9 @@ class LongTaskQueueListener(ITaskQueueListener):
 
     async def listen(self):
         while True:
-            if len(self._running_tasks) < self._config.max_running_tasks \
-                    and not self._task_queue.is_empty():
-                task_id: int = await self._task_queue.get()
-                logger.info(f"Received task id=`{task_id}`.")
-
-                is_task_cancelled = await self._task_queue.is_task_cancelled(task_id)
-                if is_task_cancelled:
-                    continue
-
-                self._running_tasks_observer.take_slot()
-                running_task = await handle_long_cpu_bound_task(
-                    self._task_repository,
-                    self._executor_task_data_storage,
-                    self._config.execution_config,
-                    task_id
-                )
-                self._running_tasks.append(running_task)
+            if len(self._running_tasks) == 0 \
+                    or not self._task_queue.is_empty() and len(self._running_tasks) < self._config.max_running_tasks:
+                await self._acquire_task()
 
             still_running_tasks = []
             for task in self._running_tasks:
@@ -129,12 +115,30 @@ class LongTaskQueueListener(ITaskQueueListener):
                         await self._task_repository.set_task_status(task.task_id, TaskStatus.FAILURE)
 
             self._running_tasks = still_running_tasks
-            asyncio.sleep(2.0)
+
+            await asyncio.sleep(2.0)
 
     def stop(self):
         for task in self._running_tasks:
             if task.process.is_alive():
                 task.process.join()
+
+    async def _acquire_task(self):
+        task_id: int = await self._task_queue.get()
+        logger.info(f"Received task id=`{task_id}`.")
+
+        is_task_cancelled = self._task_queue.is_task_cancelled(task_id)
+        if is_task_cancelled:
+            return
+
+        self._running_tasks_observer.take_slot()
+        running_task = await handle_long_cpu_bound_task(
+            self._task_repository,
+            self._executor_task_data_storage,
+            self._config.execution_config,
+            task_id
+        )
+        self._running_tasks.append(running_task)
 
 
 

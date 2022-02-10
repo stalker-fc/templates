@@ -47,7 +47,7 @@ def execute_long_task(config: ExecutionConfig, task_id: int):
         input_data = executor_task_data_storage.get_input_data(task_id)
 
         # ... do something very long ...
-        time.sleep(10.)
+        time.sleep(2.)
         output_data = f"{input_data} - successfully executed"
 
         executor_task_data_storage.set_output_data(task_id, output_data)
