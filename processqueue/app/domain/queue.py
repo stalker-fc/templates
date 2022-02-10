@@ -28,5 +28,5 @@ class ITaskQueue(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def is_empty(self) -> bool:
+    def is_empty(self) -> bool:
         pass

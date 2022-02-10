@@ -29,10 +29,10 @@ class TaskQueue(ITaskQueue):
     async def cancel(self, task_id: int) -> None:
         self._cancelled_tasks.add(task_id)
 
-    async def is_task_cancelled(self, task_id: int) -> bool:
+    def is_task_cancelled(self, task_id: int) -> bool:
         return task_id in self._cancelled_tasks
 
-    async def is_empty(self) -> bool:
+    def is_empty(self) -> bool:
         return self._queue.empty()
 
 
